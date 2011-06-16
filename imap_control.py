@@ -8,7 +8,6 @@ import sys
 from ConfigParser import ConfigParser
 from external import imaplib2
 
-
 class IdleSpinner(object):
 	def __init__(self, server, username, password):
 		self.server = server
@@ -51,7 +50,7 @@ class IdleSpinner(object):
 				self.imapconn.idle(callback=callback, timeout=30)
 				print "Did call imap idle"
 				done = True
-			except external.imaplib2.abort, ex:
+			except Exception, ex:
 				print "Server closed connection, reopening"
 				self.connect()
 				# Loop back up and try again with the idle command
