@@ -3,4 +3,5 @@ caption always "%{kB}%?%-Lw%?%{bw}%n*%f %t%?(%u)%?%{kB}%?%+Lw%?"
 autodetach off
 screen -t mutt mutt -F /home/mha/.muttrc.redpill-maildir
 screen -t offlineimap /home/mha/scripts/muttutil/imap_control.py
+zombie qr
 select 0
