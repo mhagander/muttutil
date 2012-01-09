@@ -122,16 +122,86 @@ def load_and_update_addresslist():
 	return (addrs, newmailcount)
 
 
+def raw_input_with_default(prompt, default):
+	x = raw_input("%s [%s]: " % (prompt, default))
+	if x == "":
+		return default
+	return x
+
+#
+# Run in interactive mode, allowing edits
+#
+def interactive():
+	(addrs, newmailcount) = load_and_update_addresslist()
+	print "Loaded %s addresses (%s new)" % (len(addrs), newmailcount)
+
+	anychange = False
+	while True:
+		print ""
+		search = raw_input("Enter search term (empty to exit): ")
+		if search == "":
+			break
+		hits = [a for a in addrs if a.matches_query(search)]
+		if len(hits) == 0:
+			print "No hits searching for '%s'" % search
+			continue
+		for x in range(0, len(hits)):
+			print "%s. %s" % (x+1, hits[x].printable())
+
+		while True:
+			num = raw_input("Enter number of entry to edit (empty to exit): ")
+			if num == "":
+				break
+			try:
+				num = int(num)
+			except:
+				print "Not a number!"
+				continue
+			if num < 1 or num > len(hits):
+				print "Out of range!"
+				continue
+
+			print "Editing contact. Enter for default, or '.' as name to delete"
+			hits[num-1].name = raw_input_with_default("Name", hits[num-1].name)
+			if hits[num-1].name == ".":
+				t = hits[num-1]
+				hits.remove(t)
+				addrs.remove(t)
+				anychange = True
+				break
+			hits[num-1].mail = raw_input_with_default("Email", hits[num-1].mail)
+			hits[num-1].index()
+			anychange = True
+
+			break # Skip to new prompt
+
+	# Ask to save changes
+	if anychange:
+		while True:
+			r = raw_input("Save changes [Y/N]? ").lower()
+			if r == "n":
+				break
+			if r == "y":
+				print "OK, saving!"
+				collfile = '%s/.collected_addresses' % MAILDIR
+				with open(collfile, "wb") as f:
+					pickle.dump(addrs, f)
+				break
+
 if __name__=="__main__":
+	cp = ConfigParser()
+	cp.read(os.path.expanduser('~/.muttutil'))
+	MAILDIR=cp.get('maildir', 'path')
+
+	if len(sys.argv) == 2 and sys.argv[1] == "--interactive":
+		interactive()
+		sys.exit(0)
+
 	query = " ".join(sys.argv[1:]).strip()
 	if query == "":
 		print "No query given, so no results for you!"
 		sys.exit(0)
 
-	cp = ConfigParser()
-	cp.read(os.path.expanduser('~/.muttutil'))
-	MAILDIR=cp.get('maildir', 'path')
-	
 	if not query.startswith("ldap:"):
 		# General query against collected addresses
 		# Whenever called, we always attempt to load any new addresses,
