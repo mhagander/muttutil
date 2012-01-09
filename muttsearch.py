@@ -14,9 +14,12 @@ class Address(object):
 	def __init__(self, name, mail):
 		self.mail = mail
 		self.name = decode_header(name)[0][0]
+		self.index()
+		self.count = 1
+
+	def index(self):
 		self.lowermail = self.mail.lower()
 		self.lowername = self.name.lower()
-		self.count = 1
 
 	def matches_query(self, query):
 		lq = query.lower()
@@ -33,7 +36,10 @@ class Address(object):
 		if len(name) and not len(self.name.strip()):
 			self.name = decode_header(name)[0][0]
 			self.lowername = self.name.lower()
-			
+
+	def printable(self):
+		return "%s <%s>" % (self.name, self.mail)
+
 
 #
 # Look in the specified Maildir style folder and read any mail that is
