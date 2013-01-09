@@ -1,6 +1,8 @@
 vbell off
 caption always "%{kB}%?%-Lw%?%{bw}%n*%f %t%?(%u)%?%{kB}%?%+Lw%?"
 autodetach off
+defbce on
+term screen-bce
 screen -t mutt mutt -F /home/mha/.muttrc.redpill-maildir
 screen -t offlineimap /home/mha/scripts/muttutil/imap_control.py
 zombie qr
