@@ -13,7 +13,7 @@ class Address(object):
 	# capable of basic header decoding and case insensitive matching
 	def __init__(self, name, mail):
 		self.mail = mail
-		self.name = decode_header(name)[0][0]
+		self.name = self._clean_name(name)
 		self.index()
 		self.count = 1
 
@@ -34,12 +34,16 @@ class Address(object):
 		self.count += 1
 		# Also set a name if one isn't there already
 		if len(name) and not len(self.name.strip()):
-			self.name = decode_header(name)[0][0]
+			self.name = self._clean_name(name)
 			self.lowername = self.name.lower()
 
 	def printable(self):
 		return "%s <%s>" % (self.name, self.mail)
 
+	def _clean_name(self, name):
+		# Decode a header and properly stitch together the resulting
+		# parts.
+		return " ".join([unicode(s, charset or 'us-ascii', errors='ignore') for s,charset in decode_header(name)])
 
 #
 # Look in the specified Maildir style folder and read any mail that is
@@ -123,7 +127,10 @@ def load_and_update_addresslist():
 
 
 def raw_input_with_default(prompt, default):
-	x = raw_input("%s [%s]: " % (prompt, default))
+	# raw input really sucks wrt unicode. But we hardcode ourselves to
+	# utf8, so we can do something.
+	sys.stdout.write(u"%s [%s]: " % (prompt, default))
+	x = unicode(raw_input(''), 'utf8')
 	if x == "":
 		return default
 	return x
@@ -141,6 +148,7 @@ def interactive():
 		search = raw_input("Enter search term (empty to exit): ")
 		if search == "":
 			break
+		search = unicode(search, 'utf8')
 		hits = [a for a in addrs if a.matches_query(search)]
 		if len(hits) == 0:
 			print "No hits searching for '%s'" % search
@@ -209,13 +217,14 @@ if __name__=="__main__":
 		(addrs, newmailcount) = load_and_update_addresslist()
 
 		# Now perform a query, in a very naive linear-search-everything way
+		query = unicode(query, 'utf8')
 		results = [a for a in addrs if a.matches_query(query)]
 		if len(results) > 0:
 			print "%s hits in %s records (parsed %s new mails)" % (len(results), len(addrs), newmailcount)
 
 			# Format output in a way that mutt likes
 			for a in sorted(results, key=lambda a: a.count, reverse=True):
-				print "%s\t%s\t%s mails so far" % (a.mail, a.name and a.name or ' ', a.count)
+				print "%s\t%s\t%s mails so far" % (a.mail, a.name and a.name.encode('utf8') or ' ', a.count)
 			sys.exit(0)
 
 		# If there were no results, let's try an LDAP lookup

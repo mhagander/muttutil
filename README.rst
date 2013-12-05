@@ -28,3 +28,6 @@ using the mutt query function.
 
 If nothing is found there, or if the search is prefixed with ldap:, it falls
 back to, well, LDAP, to do the search there.
+
+Note that this script only works properly if the console (and mutt) is
+in UTF-8 encoding. This is hardcoded on several locations in the script.
